@@ -1,8 +1,11 @@
-# -*- coding:utf-8 -*-
-#!/usr/bin/python
-#imports
+##
+##  Created by Kristoffer Anger on 2016-12-08.
+##  Copyright (c) 2016 OnlinePizza Norden AB. All rights reserved.
+
+# -*- coding: utf-8 -*-
 
 import sys, sqlite3, re, json, ast
+import datetime
 
 #function declaration 
 def create_connection(db_file):
@@ -60,8 +63,8 @@ def try_index(array, index, default = None):
     except: return default
 
 # define values
-database = try_index(sys.argv, 1, "/Users/admin/Desktop/Messages/chat.db")
-query = try_index(sys.argv, 2, "SELECT * FROM chat ORDER BY last_read_message_timestamp")
+database = try_index(sys.argv, 1, "/Users/kristofferanger/Library/Messages/chat.db")
+query = try_index(sys.argv, 2, "SELECT rowid FROM chat ORDER BY last_read_message_timestamp")
 flatten_output = bool_from_str(try_index(sys.argv, 3))
 keys_in_output = bool_from_str(try_index(sys.argv, 4))
 
@@ -82,5 +85,7 @@ if (keys_in_output):
         
 if (flatten_output):
     data = [item for sublist in data for item in sublist]
-        
-print json.dumps(data)
+
+
+print json.dumps(data).encode('utf-8').strip()       
+#print 

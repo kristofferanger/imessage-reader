@@ -1,20 +1,27 @@
-# -*- coding:utf-8 -*-
-#!/usr/bin/python
-#imports
+##
+##  Created by Kristoffer Anger on 2018-11-25.
+##  Copyright (c) 2018 Zacco - 360 Intellectual Property. All rights reserved.
+
+# -*- coding: utf-8 -*-
+
 import sys, json, ast
 
+#define methods
+def try_index(array, index, default = None):
+    try: return array[index]
+    except: return default
+    
 #define values
-
-html_format = """<!DOCTYPE html>  
+html_format = """
+<!DOCTYPE html>  
 <html lang="en" class=" -webkit-">
 <head>
-  <title>Chat with %s</title>
+  <title>%s</title>
   <style class="cp-pen-styles">body {
     font-family: "Helvetica Neue";
     font-size: 20px;
     font-weight: normal;
   }
-  
   section {
     max-width: 450px;
     margin: 50px auto;
@@ -29,12 +36,10 @@ html_format = """<!DOCTYPE html>
     content: "";
     display: table;
     clear: both;
-  }
-  
+  } 
   .clear {
     clear: both;
   }
-  
   .from-me {
     position: relative;
     padding: 10px 20px;
@@ -66,7 +71,6 @@ html_format = """<!DOCTYPE html>
     border-bottom-left-radius: 10px;
     -webkit-transform: translate(-30px, -2px);
   }
-  
   .from-them {
     position: relative;
     padding: 10px 20px;
@@ -107,20 +111,14 @@ html_format = """<!DOCTYPE html>
     </body>
 </html>"""
 
-try: chat = ast.literal_eval(sys.argv[1])
-except: chat = [{'text':'Hello Word!', 'from-me':1}, {'text':'Hello self!', 'from-me':0}]
-
-try: fp = str(sys.argv[2])
-except: fp = "index.html"
+chat = ast.literal_eval(try_index(sys.argv, 1, [{'text':'Hello Word!', 'from-me':1}, {'text':'Hello self!', 'from-me':0}]))
+chat_name = str(try_index(sys.argv, 2, "Unknown"))
 
 sms_color = "#56d330"
 imessage_color = "#0B93F6"
 
 #build html string 
-chat_divs = "\n".join(["<div class=\"%s\"><p>%s</p></div><div class=\"clear\"></div>" % ("from-me" if message["from-me"]==1 else "from-them", message["text"]) for message in chat])
-html = html_format % ("the World", chat_divs)
-
-#write html to file
-html_file = open(fp, "w")
-html_file.write(html)
-html_file.close()
+chat_divs = u" ".join(["<div class=\"%s\"><p>%s</p></div><div class=\"clear\"></div>" % ("from-me" if message["is_from_me"]==1 else "from-them", message["text"]) for message in chat])
+title = "Chat with %s" %(chat_name)
+result = html_format %(title, chat_divs)
+print result.encode('utf-8').strip()
