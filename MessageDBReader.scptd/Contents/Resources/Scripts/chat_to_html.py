@@ -19,13 +19,19 @@ def json_from_str(string):
         _exc_type, exc_value, exc_traceback = sys.exc_info()
         error_text = "ERROR: %r: %s" % (exc_value, string)
         last_tb = exc_traceback
+        '''
         while last_tb.tb_next:
             last_tb = last_tb.tb_next
         error_text += "error location: line=%d, col=%d" % (last_tb.tb_frame.f_locals["node"].lineno, last_tb.tb_frame.f_locals["node"].col_offset)
+        '''
+        
         osx_epoch = datetime.date(2001,01,01)
         unix_epoch = datetime.date(1970,01,01)
         current_time = (int(datetime.datetime.now().strftime('%s')) - (osx_epoch-unix_epoch).total_seconds())*1000000000
-    return [{'text':error_text, 'service':'', 'is_from_me':-1, 'date': current_time}]
+        
+
+        
+    return [{'text':exc_traceback.format_exc(), 'service':'', 'is_from_me':-1, 'date': current_time}]
 
 def div_class(message):
     
@@ -51,7 +57,7 @@ def decode_osx_date(ts):
     unix_epoch = datetime.date(1970,01,01)
 
     unix_timestamp = ts/1000000000 + (osx_epoch-unix_epoch).total_seconds()
-    date = datetime.datetime.fromtimestamp(unix_timestamp).strftime('%Y-%m-%d %H:%M')
+    date = datetime.datetime.fromtimestamp(unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
     return date
     
