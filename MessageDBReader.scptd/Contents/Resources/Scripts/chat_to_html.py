@@ -17,11 +17,11 @@ def json_from_str(string):
         return ast.literal_eval(string)
     except ValueError as ex:
         _exc_type, exc_value, exc_traceback = sys.exc_info()
-        error_text = "ERROR: %r:" % (exc_value)
+        error_text = 'ERROR: %r:' % (exc_value)
         last_tb = exc_traceback
         while last_tb.tb_next:
             last_tb = last_tb.tb_next
-        traceback_text = "Error location: line=%d, col=%d" % (last_tb.tb_frame.f_locals["node"].lineno, last_tb.tb_frame.f_locals["node"].col_offset)
+        traceback_text = 'Error location: line=%d, col=%d' % (last_tb.tb_frame.f_locals['node'].lineno, last_tb.tb_frame.f_locals['node'].col_offset)
         
         osx_epoch = datetime.date(2001,01,01)
         unix_epoch = datetime.date(1970,01,01)
@@ -47,6 +47,11 @@ def div_class(message):
 def decode_text(message):
     return message.decode('unicode-escape').encode('utf8')
 
+def decode_attachment(attachment):
+    attachment = attachment.replace('~', '/Users/admin')
+    return '<img src="file://%s">\n' % (attachment) if len(attachment)>0 or attachment.split('.')[-1] == 'pluginPayloadAttachment' else ''
+
+
 def decode_osx_date(ts):
     
     osx_epoch = datetime.date(2001,01,01)
@@ -58,7 +63,7 @@ def decode_osx_date(ts):
     return date
     
 #define values
-html_format = """
+html_format = '''
 <!DOCTYPE html>
 <html lang="en" class=" -webkit-">
     <head>
@@ -81,17 +86,20 @@ html_format = """
             margin-bottom: 12px;
             line-height: 24px;
         }
+        section img {
+            width: 100%%;
+            height: auto;
+            left: 0px;
+            right: 0px;
+        }
         section div:after {
             content: "";
             display: table;
             clear: both;
-        }       
-        .clear {
-            clear: both;
         }
         .from-me-imessage {
             position: relative;
-            padding: 10px 20px;
+            padding: 14px 20px;
             color: white;
             background: #0B93F6;
             border-radius: 25px;
@@ -122,7 +130,7 @@ html_format = """
         }
         .from-me {
             position: relative;
-            padding: 10px 20px;
+            padding: 14px 20px;
             color: white;
             background: #56d330;
             border-radius: 25px;
@@ -153,7 +161,7 @@ html_format = """
         }
         .from-them {
             position: relative;
-            padding: 10px 20px;
+            padding: 15px 20px;
             background: #E5E5EA;
             border-radius: 25px;
             color: black;
@@ -182,6 +190,9 @@ html_format = """
             border-bottom-right-radius: 10px;
             -webkit-transform: translate(-30px, -2px);
         }
+        .clear {
+            clear: both;
+        }
         .date {
             color: gray;
             font-size: 16px;
@@ -191,7 +202,7 @@ html_format = """
         }
         .error {
             position: relative;
-            padding: 10px 20px;
+            padding: 14px 20px;
             background: #E5E5EA;
             border-radius: 25px;
             color: black;
@@ -200,19 +211,23 @@ html_format = """
         </style>
     </head>
     <body>
-        <section>
-            %s
+        <section>%s
         </section>
     </body>
-</html>
-"""
+</html>'''
 
-chat_text = str(try_index(sys.argv, 1, "[{'text':'Hello world!', 'service':'iMessage', 'is_from_me':1, 'date': 123456789}, {'text':'Hello self!', 'is_from_me':0, 'service':'iMessage', 'date': 123456789}]"))
+div_format ='''
+            <div class="date"><p>%s</p></div>
+            <div class="clear"></div>
+            <div class="%s">%s<p>%s</p></div>
+            <div class="clear"></div>'''
+
+chat_text = str(try_index(sys.argv, 1, '[{"text":"Hello World!", "service":"iMessage", "is_from_me":1, "date": 123456789000000000, "filename":"IMG_0364.JPG"}]'))
 chat_name = str(try_index(sys.argv, 2, 'Unknown'))
 
 #build html string
 chat = json_from_str(chat_text)
-chat_divs = "\n".join(["<div class=\"date\"><p>%s</p></div><div class=\"%s\"><p>%s</p></div><div class=\"clear\"></div>" % (decode_osx_date(message["date"]), div_class(message), decode_text(message["text"])) for message in chat])
-title = "Chat with %s" %(chat_name)
+chat_divs = ''.join([div_format % (decode_osx_date(message['date']), div_class(message), decode_attachment(message['filename']), decode_text(message['text'])) for message in chat])
+title = 'Chat with %s' %(chat_name)
 result = html_format %(title, chat_divs)
 print result
