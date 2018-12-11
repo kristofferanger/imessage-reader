@@ -47,10 +47,17 @@ def div_class(message):
 def decode_text(message):
     return message.decode('unicode-escape').encode('utf8')
 
-def decode_attachment(attachment):
-    attachment = attachment.replace('~', '/Users/admin')
-    return '<img src="file://%s">\n' % (attachment) if len(attachment)>0 or attachment.split('.')[-1] == 'pluginPayloadAttachment' else ''
 
+def decode_attachment(attachment, db_path):
+
+    if len(attachment)== 0:
+        return ''
+    else:
+        db_path_comp = db_path.split('/')
+        attm_path_comp = attachment.split('/')
+        attachment = '/'.join(db_path_comp[:db_path_comp.index("Messages")] + attm_path_comp[attm_path_comp.index("Messages"):])
+        attachment = attachment.replace('pluginPayloadAttachment', 'png')
+        return '<img src="file://%s">' % (attachment)
 
 def decode_osx_date(ts):
     
@@ -222,12 +229,13 @@ div_format ='''
             <div class="%s">%s<p>%s</p></div>
             <div class="clear"></div>'''
 
-chat_text = str(try_index(sys.argv, 1, '[{"text":"Hello World!", "service":"iMessage", "is_from_me":1, "date": 123456789000000000, "filename":"IMG_0364.JPG"}]'))
-chat_name = str(try_index(sys.argv, 2, 'Unknown'))
+db_path = str(try_index(sys.argv, 1, '~/Library/Messages/chat.db'))
+chat_text = str(try_index(sys.argv, 2, '[{"text":"Hello World!", "service":"iMessage", "is_from_me":1, "date": 123456789000000000, "filename":"~/Library/Messages/Attachments/85/05/34D85C20-0CA9-46F5-9ED5-A071FF8FE67B/IMG_0632.JPG"}]'))
+chat_name = str(try_index(sys.argv, 3, 'Unknown'))
 
 #build html string
 chat = json_from_str(chat_text)
-chat_divs = ''.join([div_format % (decode_osx_date(message['date']), div_class(message), decode_attachment(message['filename']), decode_text(message['text'])) for message in chat])
+chat_divs = ''.join([div_format % (decode_osx_date(message['date']), div_class(message), decode_attachment(message['filename'], db_path), decode_text(message['text'])) for message in chat])
 title = 'Chat with %s' %(chat_name)
 result = html_format %(title, chat_divs)
 print result
