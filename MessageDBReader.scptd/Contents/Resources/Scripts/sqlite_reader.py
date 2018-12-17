@@ -7,7 +7,8 @@
 
 import sys, sqlite3, re, json
 
-#function declaration 
+#method declarations
+
 def create_connection(db_file):
     '''
     Create a database connection to the SQLite database
@@ -21,36 +22,18 @@ def create_connection(db_file):
     except Exception as e:
         print('error: %s' % (e))
     return None
-
-def get_json_data_from_db(conn, query):
-    '''
-    Query all rows in the tasks table
-    :param conn: the Connection object
-    :param query: the Query string
-    :return: sqlite db response
-    '''
-    cursor = conn.cursor()
-    cursor.execute(query)
-    return cursor.fetchall()
-
+  
 def keys_from_select_query(select_query):
     '''
     Sort out keys in a query, ie words
     between 'SELECT' and 'FROM'
     :param select_query: the Query object
     :return: result as a list
-    '''    
+    '''  
     keys = re.findall('(?<=SELECT).*(?=FROM)', select_query)
     keys = re.findall('([\w.]+)', ''.join(keys))
     keys = [key.split('.')[-1] for key in keys]
-    
     return keys
-
-def dict_factory(cursor, row):
-    d = {}
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
 
 def execute_query(conn, query):
     '''
@@ -65,6 +48,13 @@ def execute_query(conn, query):
     cursor = conn.cursor()
     cursor.execute(query)
     return cursor.fetchall()
+
+    ''' helper methods '''
+def dict_factory(cursor, row):
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
 
 def bool_from_str(string):
     return True if string in ('True', 'TRUE', 'true', '1', 'YES', 'Yes', 'Y', 'y') else False
