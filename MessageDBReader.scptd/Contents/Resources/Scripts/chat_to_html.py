@@ -10,8 +10,10 @@ import sys, json, ast, datetime, pdb, re, subprocess
 #define methods
 def try_index(array, i, default = None):
     try:
-        return array[i]
+        # try get string object at index
+        return str(array[i])
     except:
+        # return default string
         return default
 
 def image_metadata(img_fp):
@@ -25,8 +27,7 @@ def image_metadata(img_fp):
     md_dict = dict(zip(md_ls[0:][::2], md_ls[1:][::2]))
     return md_dict
 
-def image_metadata_short(img_fp):
-    md_dict = image_metadata(img_fp)
+def image_metadata_short(md_dict):
     md_short = {}
     md_short['image_name'] = md_dict.get('kMDItemDisplayName', '-')
     md_short['image_size'] = ' x '.join([md_dict.get('kMDItemPixelWidth', '-'), md_dict.get('kMDItemPixelHeight', '-')])
@@ -93,9 +94,11 @@ def decode_attachment(attm_path, db_path):
         if 'pluginPayloadAttachment' in img_src:
             return '<img src="file://%s">' % (img_src)
         else:
-            img_md = image_metadata_short(img_src)
-            md_txt = '   '.join([key + ': ' + img_md.get(key, '-').replace('"', '') for key in img_md])
-            return '<img src="%s" onclick="window.open(this.src)"><br><a href="javascript:alert(\'%s\');">Visa information</a>'% (img_src, md_txt)
+            img_md = image_metadata(img_src)
+            img_md_short = image_metadata_short(img_md)
+            md_txt = '   '.join([key + ': ' + img_md_short.get(key, '-').replace('"', '') for key in img_md_short])
+            portrait = 'portrait' if int(img_md.get('kMDItemOrientation', '0')) > 0 and img_md.get('kMDItemComment', '') != '"Screenshot"' else ''
+            return '<img class="%s" src="%s" onclick="window.open(this.src)"><br><a href="javascript:alert(\'%s\');">Visa information</a>'% (portrait, img_src, md_txt)
 
 def decode_osx_date(ts):
     osx_epoch = datetime.date(2001,01,01)
@@ -143,11 +146,15 @@ html_format = '''
             display:​ block;
             margin: auto;
         }
+        .portrait {
+             transform: rotate(90deg);
+             padding: 37px 0;
+        }
         p {
             margin: auto;
         }
         .imessage {
-            --from-me-color: #0B93F6
+            --from-me-color: #0B93F6;
         }
         .from-me {
             position: relative;
@@ -243,9 +250,9 @@ div_format ='''
             <div class="clear"></div>
             '''
 
-db_path = str(try_index(sys.argv, 1, ''))
-chat_text = str(try_index(sys.argv, 2, '[{"date":559116550, "is_from_me":0, "text":" Hello there!   ", "filename":""}, {"date":%s, "is_from_me":1, "text":"\ufffc", "filename":"/Users/admin/Desktop/img_forest.jpg"}]' % ((datetime.datetime.now() - datetime.datetime.utcfromtimestamp(0)).total_seconds())))
-chat_name = str(try_index(sys.argv, 3, 'Unknown'))
+db_path = try_index(sys.argv, 1, '')
+chat_text = try_index(sys.argv, 2, '[{"date":559116550, "is_from_me":0, "text":" Hello there!   ", "filename":""}, {"date":%s, "is_from_me":1, "text":"\ufffc", "filename":"/Users/admin/Desktop/img_forest.jpg"}]' % ((datetime.datetime.now() - datetime.datetime.utcfromtimestamp(0)).total_seconds()))
+chat_name = try_index(sys.argv, 3, 'Unknown')
 
 #build html string
 chat = json_from_str(chat_text)
